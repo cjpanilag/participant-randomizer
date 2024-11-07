@@ -67,8 +67,10 @@ const App: React.FC = () => {
         <div className="flex gap-2">
           <div className="card bg-opacity-50 bg-white/30 backdrop-blur-md shadow-xl border border-white/20 max-w-[15rem]">
             <div className="card-body items-left text-center">
-              <h1 className="text-white/60 font-light text-md">Participant</h1>
-              <h3 className="text-black/70 font-bold text-2xl">1000</h3>
+              <h1 className="text-white/60 font-light text-md">Participants</h1>
+              <h3 className="text-black/70 font-bold text-2xl">
+                {participants.length}
+              </h3>
             </div>
           </div>
           <div className="flex-1"></div>
