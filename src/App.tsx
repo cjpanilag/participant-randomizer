@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import Confetti from "react-confetti";
 
-// Define the Participant type
 type Participant = {
   id: number;
+  uuid: string;
   name: string;
   email: string;
+  created_at: string;
 };
+
+const API_URL = "http://localhost:3000/api";
+// const API_URL = "https://event-form-flax.vercel.app/api";
 
 const App: React.FC = () => {
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -16,19 +20,34 @@ const App: React.FC = () => {
   const [confettiVisible, setConfettiVisible] = useState<boolean>(false);
   const [isOnRandomizeMode, setIsOnRandomizeMode] = useState<boolean>(false);
 
-  useEffect(() => {
-    fetch("https://event-form-flax.vercel.app/api/participants")
+  const fetchParticipants = () => {
+    fetch(`${API_URL}/participants`)
       .then((res) => res.json())
       .then((data) => {
         const mappedResult = data.map((participant: any, index: number) => ({
-          id: index + 1, // Start IDs from 1
           ...participant,
+          id: index + 1,
+          uuid: participant.id,
+          created_at: new Date(participant.created_at).toLocaleString("en-US", {
+            timeZone: "Asia/Manila",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+          }),
         }));
         setParticipants(mappedResult);
       })
       .catch((err) => {
         console.log(err.json());
       });
+  };
+
+  useEffect(() => {
+    fetchParticipants();
   }, []);
 
   const randomize = () => {
@@ -61,6 +80,25 @@ const App: React.FC = () => {
     }, interval);
   };
 
+  useEffect(() => {
+    if (winner !== null) {
+      console.log("winner", winner);
+      fetch(`${API_URL}/participants`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: winner.uuid,
+          status: 0,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => console.log(data))
+        .catch((error) => console.error("Error:", error));
+    }
+  }, [winner]);
+
   const Form: React.FC = () => {
     return (
       <React.Fragment>
@@ -90,6 +128,7 @@ const App: React.FC = () => {
                   <th></th>
                   <th>Name</th>
                   <th>Email</th>
+                  <th>Date</th>
                 </tr>
               </thead>
               <tbody>
@@ -99,6 +138,7 @@ const App: React.FC = () => {
                       <th>{participant.id}</th>
                       <td>{participant.name}</td>
                       <td>{participant.email}</td>
+                      <td>{participant.created_at}</td>
                     </React.Fragment>
                   </tr>
                 ))}
@@ -139,6 +179,7 @@ const App: React.FC = () => {
                     onClick={() => {
                       setConfettiVisible(false);
                       setIsOnRandomizeMode(false);
+                      fetchParticipants();
                     }}
                   >
                     Back
