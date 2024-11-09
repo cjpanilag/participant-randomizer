@@ -9,8 +9,7 @@ type Participant = {
   created_at: string;
 };
 
-// const API_URL = "http://localhost:3000/api";
-const API_URL = "https://event-form-flax.vercel.app/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const App: React.FC = () => {
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -44,6 +43,66 @@ const App: React.FC = () => {
       .catch((err) => {
         console.log(err.json());
       });
+  };
+
+  const downloadCSV = () => {
+    fetch(`${API_URL}/participants/all`)
+      .then((res) => res.json())
+      .then((data) => {
+        const mappedResult = data.map((participant: any, index: number) => ({
+          ...participant,
+          id: index + 1,
+          uuid: participant.id,
+          created_at: new Date(participant.created_at).toLocaleString("en-US", {
+            timeZone: "Asia/Manila",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+          }),
+        }));
+        const headers = ["Name", "Email", "Date Registered"];
+        const rows = mappedResult.map(
+          ({
+            name,
+            email,
+            created_at,
+          }: {
+            name: string;
+            email: string;
+            created_at: string;
+          }) => [name, email, created_at],
+        );
+
+        const csvContent = [
+          headers.join(","), // Add header row
+          ...rows.map((row: string[]) => row.join(",")), // Add each data row
+        ].join("\n");
+
+        // Create a Blob with the CSV content
+        const blob = new Blob([csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const url = URL.createObjectURL(blob);
+
+        // Create a download link and click it to trigger download
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "participants.csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link); // Clean up
+        URL.revokeObjectURL(url); // Free up memory
+      })
+      .catch((err) => {
+        console.log(err.json());
+      });
+
+    if (participants.length > 0) {
+    }
   };
 
   useEffect(() => {
@@ -112,7 +171,30 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="flex-1"></div>
-          <div className="flex items-center justify-center">
+          <div className="flex gap-2 items-center justify-center">
+            <button className="btn btn-success mt-20" onClick={downloadCSV}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M14 3v5h5M8 13h8M8 17h8M8 9h2"
+                />
+              </svg>
+              Download Attendance
+            </button>
             <button className="btn mt-20" onClick={randomize}>
               Randomize
             </button>
