@@ -9,8 +9,8 @@ type Participant = {
   created_at: string;
 };
 
-const API_URL = "http://localhost:3000/api";
-// const API_URL = "https://event-form-flax.vercel.app/api";
+// const API_URL = "http://localhost:3000/api";
+const API_URL = "https://event-form-flax.vercel.app/api";
 
 const App: React.FC = () => {
   const [participants, setParticipants] = useState<Participant[]>([]);
